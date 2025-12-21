@@ -11,7 +11,7 @@ sys.path.insert(0, project_root)
 mcp_server_path = os.path.join(project_root, "mcp-server-demo")
 sys.path.insert(0, mcp_server_path)
 
-import mcp_test
+import davinci_mcp_server
 
 # 実行
 if __name__ == "__main__":
@@ -24,4 +24,4 @@ if __name__ == "__main__":
     
     # MCPサーバーをresolveインスタンスと一緒に起動
     print("Starting MCP server with DaVinci Resolve instance...")
-    mcp_test.run_server(resolve=resolve)
+    davinci_mcp_server.run_server(resolve=resolve)
