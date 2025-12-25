@@ -210,33 +210,15 @@ def add_test_clips_to_timeline(resolve,project, media_pool, timeline):
         # ジェネレーターを作成（赤色）
         generator_red = {
             "mediaPoolItem": add_clip,
-            "startFrame": 150,  # 150フレーム
+            "startFrame": 0,  # 0フレーム
         }
         
         # タイムラインにジェネレーターを追加
         result = media_pool.AppendToTimeline([generator_red])
-        if result:
-            print("✅ 赤色のカラークリップを追加しました（150フレーム）")
-        else:
-            print("⚠️ クリップの追加に失敗しました")
-            # 別の方法を試す：CreateTimelineFromClips
-            print("📝 別の方法でクリップを追加してみます...")
-        
-        # 複数のジェネレーターを追加
-        generators = []
-        colors = ["Red", "Green", "Blue"]
-        for i, color in enumerate(colors):
-            gen = {
-                "GeneratorName": "Solid Color",
-                "Duration": 100 + (i * 25),  # 100, 125, 150フレーム
-            }
-            generators.append(gen)
-        
-        result = media_pool.AppendToTimeline(generators)
-        if result:
-            print(f"✅ {len(colors)}個のカラークリップを追加しました")
-        else:
-            print("⚠️ 複数クリップの追加に失敗")
+        if not result:
+            print("❌ カラージェネレーターの追加に失敗")
+            return None
+        print("✅ カラージェネレーターの追加成功")
         
         # タイムライン情報を再表示
         print(f"\n📊 タイムライン更新後の情報:")
@@ -263,7 +245,7 @@ def main(resolve=None):
     # resolveインスタンスが渡されていない場合は取得を試みる
     if resolve is None:
         print("🔍 Resolveインスタンスが渡されていません。自動取得を試みます...")
-        resolve = test_basic_connection()
+        resolve = app.GetResolve()
         if not resolve:
             return
     else:

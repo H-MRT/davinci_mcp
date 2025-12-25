@@ -1,0 +1,6 @@
+Davinci ResolveのUI上で実行するスクリプトを配置するフォルダ
+
+使用するには、Davinci Resolveのスクリプトのフォルダにソースコードのファイルをコピーしてください。
+
+下記にショートカットを作成しましたので、こちらを使用すると便利です。
+./davinci_script_shortcut.lnk
