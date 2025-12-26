@@ -203,7 +203,7 @@ def add_test_clips_to_timeline(resolve,project, media_pool, timeline):
         cliplist = pool.GetCurrentFolder().GetClipList()
         add_clip = None
         for clip in cliplist :  # 目的のクリップを検索
-            if clip.GetClipProperty('Clip Name') == 'Solid Color' :    # 今回は「jimaku」というクリップを検索
+            if clip.GetClipProperty('Clip Name') == 'TestClip' :
                 add_clip = clip
                 break
         
@@ -211,6 +211,9 @@ def add_test_clips_to_timeline(resolve,project, media_pool, timeline):
         generator_red = {
             "mediaPoolItem": add_clip,
             "startFrame": 0,  # 0フレーム
+            "endFrame": 92,  # 100フレームまで
+            'trackIndex':1, 
+            "recordFrame": 100
         }
         
         # タイムラインにジェネレーターを追加
@@ -245,7 +248,7 @@ def main(resolve=None):
     # resolveインスタンスが渡されていない場合は取得を試みる
     if resolve is None:
         print("🔍 Resolveインスタンスが渡されていません。自動取得を試みます...")
-        resolve = app.GetResolve()
+        resolve = app.GetResolve()# type: ignore
         if not resolve:
             return
     else:
