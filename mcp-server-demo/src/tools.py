@@ -38,14 +38,14 @@ def register_tools(mcp):
         return "No project opened"
 
     @mcp.tool()
-    def add_solid_color_to_timeline(start_frame: int = 0, clip_name: str = "Solid Color", clip_duration_frames: int = 50) -> str:
+    def add_solid_color_to_timeline(start_frame: int = 0, clip_duration: int = 50, clip_name: str = "Solid Color", ) -> str:
         """
         Add a Solid Color clip from media pool to the current timeline
         
         Args:
             start_frame: Starting frame position for the clip (default: 0)
+            clip_duration: Duration of the clip in frames (default: 50)
             clip_name: Name of the clip to search for in media pool (default: "Solid Color")
-            clip_duration_frames: Duration of the clip in frames (default: 50)
         
         Returns:
             Success or error message
@@ -105,7 +105,7 @@ def register_tools(mcp):
             clip_config = {
                 "mediaPoolItem": target_clip,
                 "startFrame": 0,
-                "endFrame": clip_duration_frames - 1,
+                "endFrame": clip_duration - 1,
                 'trackIndex': 1
                 # recordFrameを指定しない - 自動的にダミーの次の位置に追加される
             }
@@ -124,7 +124,7 @@ def register_tools(mcp):
                         return "Failed to delete dummy clip (but main clip was added)"
             
             timeline_name = timeline.GetName()
-            return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame} (duration: {clip_duration_frames} frames)"
+            return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame} (duration: {clip_duration} frames)"
                 
         except Exception as e:
             return f"Error: {type(e).__name__}: {str(e)}"

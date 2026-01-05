@@ -4,11 +4,11 @@ import os
 
 # プロジェクトのルートディレクトリ（davinci_resolve_mcpフォルダ）を追加
 # ここにsrcフォルダが入っている
-project_root = r"C:\Users\giohe\Desktop\Dev\repository\davinci_resolve_mcp"
+project_root = r"C:\Users\giohe\Desktop\Dev\repository\davinci_resolve_mcp\mcp-server-demo"
 sys.path.insert(0, project_root)
 
 # mcp-server-demoフォルダをパスに追加
-mcp_server_path = os.path.join(project_root, "mcp-server-demo\src")
+mcp_server_path = os.path.join(project_root, "src")
 sys.path.insert(0, mcp_server_path)
 
 import davinci_mcp_server
