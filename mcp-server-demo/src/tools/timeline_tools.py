@@ -1,61 +1,45 @@
 """
-DaVinci Resolve MCP サーバーのツール定義
+DaVinci Resolve タイムライン関連のツール
 """
 
-# グローバル変数としてresolveインスタンスを保持
-resolve_instance = None
+from .base import get_resolve_instance
 
 
-def set_resolve_instance(resolve):
+def register_timeline_tools(mcp):
     """
-    DaVinci Resolveインスタンスを設定
-    
-    Args:
-        resolve: DaVinci Resolveインスタンス
-    """
-    global resolve_instance
-    resolve_instance = resolve
-
-
-def register_tools(mcp):
-    """
-    MCPサーバーにツールを登録
+    タイムライン関連ツールをMCPサーバーに登録
     
     Args:
         mcp: FastMCPインスタンス
     """
 
     @mcp.tool()
-    def get_project_name() -> str:
-        """Get current DaVinci Resolve project name"""
-        if resolve_instance is None:
-            return "No Resolve instance available"
-        
-        project_manager = resolve_instance.GetProjectManager()
-        current_project = project_manager.GetCurrentProject()
-        if current_project:
-            return current_project.GetName()
-        return "No project opened"
-
-    @mcp.tool()
-    def add_solid_color_to_timeline(start_frame: int = 0, clip_duration: int = 50, clip_name: str = "Solid Color", ) -> str:
+    def add_solid_color_to_timeline(start_frame: int = 0, duration_in_frames: int = 50, clip_name: str = "Solid Color") -> str:
         """
         Add a Solid Color clip from media pool to the current timeline
         
+        This tool adds a solid color clip to the timeline at a specified frame position
+        with a specified length in frames.
+        
         Args:
-            start_frame: Starting frame position for the clip (default: 0)
-            clip_duration: Duration of the clip in frames (default: 50)
-            clip_name: Name of the clip to search for in media pool (default: "Solid Color")
+            start_frame: The frame number where the clip should start on the timeline.
+                        Frame 0 is the beginning of the timeline. (default: 0)
+            duration_in_frames: The length of the clip in frames. For example, if set to 50,
+                               the clip will be 50 frames long. At 24fps, this equals about 2 seconds.
+                               Must be a positive integer. (default: 50)
+            clip_name: The exact name of the clip to search for in the current media pool folder.
+                      The clip must exist in the media pool before adding. (default: "Solid Color")
         
         Returns:
             Success or error message
         """
-        if resolve_instance is None:
+        resolve = get_resolve_instance()
+        if resolve is None:
             return "No Resolve instance available"
         
         try:
             # Get current project
-            project = resolve_instance.GetProjectManager().GetCurrentProject()
+            project = resolve.GetProjectManager().GetCurrentProject()
             if not project:
                 return "No project is currently open"
             
@@ -105,7 +89,7 @@ def register_tools(mcp):
             clip_config = {
                 "mediaPoolItem": target_clip,
                 "startFrame": 0,
-                "endFrame": clip_duration - 1,
+                "endFrame": duration_in_frames - 1,
                 'trackIndex': 1
                 # recordFrameを指定しない - 自動的にダミーの次の位置に追加される
             }
@@ -124,7 +108,7 @@ def register_tools(mcp):
                         return "Failed to delete dummy clip (but main clip was added)"
             
             timeline_name = timeline.GetName()
-            return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame} (duration: {clip_duration} frames)"
+            return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame} (duration: {duration_in_frames} frames)"
                 
         except Exception as e:
             return f"Error: {type(e).__name__}: {str(e)}"
