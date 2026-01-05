@@ -2,6 +2,7 @@
 DaVinci Resolve タイムライン関連のツール
 """
 
+from typing import Optional
 from .base import get_resolve_instance
 
 
@@ -118,10 +119,10 @@ def register_timeline_tools(mcp):
         track_type: str = "video",
         track_index: int = 1,
         item_index: int = 1,
-        pan: float | None = None,
-        tilt: float | None = None,
-        anchor_point_x: float | None = None,
-        anchor_point_y: float | None = None
+        pan: Optional[float] = None,
+        tilt: Optional[float] = None,
+        anchor_point_x: Optional[float] = None,
+        anchor_point_y: Optional[float] = None
     ) -> str:
         """
         Set the position properties of a timeline item
@@ -186,9 +187,10 @@ def register_timeline_tools(mcp):
             if pan is None and tilt is None and anchor_point_x is None and anchor_point_y is None:
                 return "At least one position property (pan, tilt, anchor_point_x, or anchor_point_y) must be provided"
             
-            # Get timeline resolution for range validation
-            # Note: We'll use a simplified validation approach since exact width/height 
-            # may not be easily accessible. The API will clip values beyond range.
+            # Note: Values beyond the documented range (-4.0*width to 4.0*width for Pan/AnchorPointX
+            # and -4.0*height to 4.0*height for Tilt/AnchorPointY) will be automatically clipped
+            # by the DaVinci Resolve API. Exact width/height values depend on timeline resolution.
+            # TODO: Consider implementing stricter validation if timeline resolution becomes accessible.
             
             # Apply properties
             updated_properties = []
