@@ -206,22 +206,53 @@ def add_test_clips_to_timeline(resolve,project, media_pool, timeline):
             if clip.GetClipProperty('Clip Name') == 'TestClip' :
                 add_clip = clip
                 break
+            
+        add_position = 100  # 追加位置フレーム
         
-        # ジェネレーターを作成（赤色）
-        generator_red = {
+        # recordFrameの不具合回避: ダミークリップ方式を使用
+        # ステップ1: recordFrame位置までダミークリップを追加
+        print("🔧 ダミークリップを追加中(recordFrame位置まで)...")
+        dummy_clip_config = {
             "mediaPoolItem": add_clip,
-            "startFrame": 0,  # 0フレーム
-            "endFrame": 92,  # 100フレームまで
-            'trackIndex':1, 
-            "recordFrame": 100
+            "startFrame": 0,
+            "endFrame": add_position - 1,  # recordFrame(100)までの長さ = 100フレーム
+            'trackIndex': 1,
         }
         
-        # タイムラインにジェネレーターを追加
+        dummy_result = media_pool.AppendToTimeline([dummy_clip_config])
+        if not dummy_result:
+            print("❌ ダミークリップの追加に失敗")
+            return None
+        print("✅ ダミークリップの追加成功")
+        
+        # ステップ2: 本来追加したいクリップを追加(recordFrameを指定しない)
+        print("🎨 本来のクリップを追加中...")
+        generator_red = {
+            "mediaPoolItem": add_clip,
+            "startFrame": 0,
+            "endFrame": add_position + 49,  # 50フレーム分の長さ
+            'trackIndex': 1
+            # recordFrameを指定しない - 自動的にダミーの次の位置に追加される
+        }
+        
         result = media_pool.AppendToTimeline([generator_red])
         if not result:
-            print("❌ カラージェネレーターの追加に失敗")
+            print("❌ 本来のクリップの追加に失敗")
             return None
-        print("✅ カラージェネレーターの追加成功")
+        print("✅ 本来のクリップの追加成功")
+        
+        # ステップ3: ダミークリップを削除
+        print("🗑️ ダミークリップを削除中...")
+        track_items = timeline.GetItemListInTrack("video", 1)
+        if track_items and len(track_items) > 0:
+            first_item = track_items[0]  # 最初のアイテム(ダミークリップ)
+            delete_result = timeline.DeleteClips([first_item])
+            if delete_result:
+                print("✅ ダミークリップの削除成功")
+            else:
+                print("⚠️ ダミークリップの削除に失敗")
+        else:
+            print("⚠️ ダミークリップが見つかりませんでした")
         
         # タイムライン情報を再表示
         print(f"\n📊 タイムライン更新後の情報:")

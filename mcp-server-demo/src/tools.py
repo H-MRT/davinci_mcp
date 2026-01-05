@@ -24,11 +24,6 @@ def register_tools(mcp):
     Args:
         mcp: FastMCPインスタンス
     """
-    
-    @mcp.tool()
-    def add(a: int, b: int) -> int:
-        """Add two numbers"""
-        return a + b
 
     @mcp.tool()
     def get_project_name() -> str:
@@ -43,14 +38,14 @@ def register_tools(mcp):
         return "No project opened"
 
     @mcp.tool()
-    def add_solid_color_to_timeline(start_frame: int = 0, clip_name: str = "Solid Color") -> str:
+    def add_solid_color_to_timeline(start_frame: int = 0, clip_name: str = "Solid Color", clip_duration_frames: int = 50) -> str:
         """
         Add a Solid Color clip from media pool to the current timeline
         
         Args:
             start_frame: Starting frame position for the clip (default: 0)
             clip_name: Name of the clip to search for in media pool (default: "Solid Color")
-            start_position: Frame position in the clip to start from (default: None)
+            clip_duration_frames: Duration of the clip in frames (default: 50)
         
         Returns:
             Success or error message
@@ -92,27 +87,44 @@ def register_tools(mcp):
             if not target_clip:
                 return f"Clip '{clip_name}' not found in current media pool folder"
             
-            # 2.クリップ配置時の設定(dict型に格納)
-            timeline_fps = project.GetSetting('timelineFrameRate')  # タイムラインのフレームレート取得
-            clip_fps = target_clip.GetClipProperty('FPS')             # クリップのフレームレート取得
-            clip_len_second = 10.0              # 配置する際のクリップの長さ(秒)
-            add_second = 10.0                   # タイムラインへ配置するタイミング（秒）
-            clip_len_frame = clip_len_second * clip_fps # クリップの長さ(フレーム)
-            info = {'mediaPoolItem':target_clip ,  # 追加するクリップ
-                    'startFrame':0,        # 追加アイテムのトリミング開始フレーム（クリップFPSに依存）
-                    'endFrame':clip_len_frame - 1,  # 追加アイテムのトリミング終了フレーム（クリップFPSに依存）
-                    #'mediaType':1,        # 動画の映像と音声でトラック番号をずらしたい場合などに指定する
-                    'trackIndex':1,        # トラック数より大きい場合、その分のトラックを追加する
-                    'recordFrame':add_second * timeline_fps }    # タイムライン上の配置フレーム（タイムラインFPSに依存）
-
-            # 3.クリップをタイムラインへ配置
-            result = media_pool.AppendToTimeline([info])
-            if result:
-                timeline_name = timeline.GetName()
-                print(f"Added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame}")
-                return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame}"
-            else:
-                return f"Failed to add '{clip_name}' to timeline"
+            # recordFrameの不具合回避: ダミークリップ方式を使用
+            # ステップ1: recordFrame位置までダミークリップを追加
+            if start_frame > 0:
+                dummy_clip_config = {
+                    "mediaPoolItem": target_clip,
+                    "startFrame": 0,
+                    "endFrame": start_frame - 1,  # start_frameまでの長さ
+                    'trackIndex': 1,
+                }
+                
+                dummy_result = media_pool.AppendToTimeline([dummy_clip_config])
+                if not dummy_result:
+                    return "Failed to add dummy clip"
+            
+            # ステップ2: 本来追加したいクリップを追加(recordFrameを指定しない)
+            clip_config = {
+                "mediaPoolItem": target_clip,
+                "startFrame": 0,
+                "endFrame": clip_duration_frames - 1,
+                'trackIndex': 1
+                # recordFrameを指定しない - 自動的にダミーの次の位置に追加される
+            }
+            
+            result = media_pool.AppendToTimeline([clip_config])
+            if not result:
+                return "Failed to add clip to timeline"
+            
+            # ステップ3: ダミークリップを削除（start_frame > 0の場合のみ）
+            if start_frame > 0:
+                track_items = timeline.GetItemListInTrack("video", 1)
+                if track_items and len(track_items) > 0:
+                    first_item = track_items[0]  # 最初のアイテム(ダミークリップ)
+                    delete_result = timeline.DeleteClips([first_item])
+                    if not delete_result:
+                        return "Failed to delete dummy clip (but main clip was added)"
+            
+            timeline_name = timeline.GetName()
+            return f"Successfully added '{clip_name}' to timeline '{timeline_name}' at frame {start_frame} (duration: {clip_duration_frames} frames)"
                 
         except Exception as e:
             return f"Error: {type(e).__name__}: {str(e)}"
